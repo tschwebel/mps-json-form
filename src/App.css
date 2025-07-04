@@ -53,6 +53,7 @@
   border-color: #ffb300 !important;
   background-color: #fff8e1;
 }
+
 button[type="submit"] {
   background-color: rgb(37, 64, 112);
   color: #ffb300;
@@ -71,11 +72,13 @@ button[type="submit"]:hover {
   background-color: #ffb300;
   color: rgb(37, 64, 112);
 }
+
 .form-logo {
   display: block;
   max-width: 400px;
   margin: 0 auto 20px;
 }
+
 .template-preview {
   margin-top: 25px;
   padding: 15px;
@@ -92,52 +95,28 @@ button[type="submit"]:hover {
 
 .template-thumbnails {
   display: flex;
-  gap: 12px;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
 }
 
-.template-thumb {
-  width: 120px;
-  height: auto;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.template-details {
-  flex: 1;
-  font-size: 14px;
-  color: #444;
-}
-
-.template-path {
-  margin-bottom: 8px;
-  font-family: monospace;
-  color: rgb(37, 64, 112);
-  word-break: break-all;
-}
-.template-preview {
-  margin-top: 25px;
-  padding: 15px;
-  border: 2px solid rgb(37, 64, 112);
-  border-radius: 8px;
-  background-color: #f0f5ff;
-}
-
-.template-info {
+.template-thumbnails-vertical {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 15px;
-}
-
-.template-thumbnails {
-  display: flex;
-  gap: 12px;
+  gap: 20px;
+  width: 100%;
 }
 
 .template-thumb {
-  width: 120px;
+  max-width: 2400px;    /* doubled from 1200px */
+  max-height: 1600px;   /* doubled from 800px */
+  width: auto;
   height: auto;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 4px;
+  object-fit: contain;
 }
 
 .template-details {
@@ -168,213 +147,8 @@ button[type="submit"]:hover {
   background-color: #ffb300;
   color: rgb(37, 64, 112);
 }
-.template-preview {
-  margin-top: 25px;
-  padding: 15px;
-  border: 2px solid rgb(37, 64, 112);
-  border-radius: 8px;
-  background-color: #f0f5ff;
-}
 
-.template-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.template-thumbnails {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-  width: 100%;
-  max-width: 100%;
-}
-
-/* Each thumb scales so its largest dimension maxes out at 300px */
-.template-thumb {
-  max-width: 2000px;    /* max width */
-  max-height: 1000px;   /* max height */
-  width: auto;
-  height: auto;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  object-fit: contain;
-}
-
-
-.template-details {
-  flex: 1;
-  font-size: 14px;
-  color: #444;
-}
-
-.template-path {
-  margin-bottom: 8px;
-  font-family: monospace;
-  color: rgb(37, 64, 112);
-  word-break: break-all;
-}
-
-.template-details button {
-  background-color: rgb(37, 64, 112);
-  color: #ffb300;
-  padding: 6px 12px;
-  font-weight: 600;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.template-details button:hover {
-  background-color: #ffb300;
-  color: rgb(37, 64, 112);
-}
-/* Override for horizontal layout (portrait or mixed) */
-.template-thumbnails-horizontal {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-  width: 100%; /* full width */
-  max-width: 100%;
-}
-
-/* Vertical stacking for both landscape */
-.template-thumbnails-vertical {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-}
-
-.template-thumbnails-vertical {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-}
-
-.template-thumbnails-vertical .template-thumb {
-  flex: none;
-  width: auto;
-  max-width: 600px;
-  height: auto;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  object-fit: contain;
-}
-.template-preview > strong {
-  display: block;   /* so margin works reliably */
-  margin-bottom: 30px; /* adjust spacing as you like */
-}
-
-
-
-
-/* Login form container: center horizontally and vertically */
-.login-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; /* full viewport height */
-  background-color: #f0f2f5;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* The login form box */
-.login-form {
-  background: white;
-  padding: 2rem 3rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  width: 320px;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-/* Heading */
-.login-form h2 {
-  margin-bottom: 1.5rem;
-  color: #333;
-  font-weight: 600;
-}
-
-/* Labels */
-.login-form label {
-  display: block;
-  text-align: left;
-  margin-bottom: 0.3rem;
-  font-weight: 500;
-  color: #444;
-}
-
-/* Inputs */
-.login-form input[type="text"],
-.login-form input[type="password"] {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  margin-bottom: 1.2rem;
-  border: 1.5px solid #ccc;
-  border-radius: 5px;
-  font-size: 1rem;
-  transition: border-color 0.3s;
-  box-sizing: border-box;
-}
-
-.login-form input[type="text"]:focus,
-.login-form input[type="password"]:focus {
-  outline: none;
-  border-color: #0066ff;
-  box-shadow: 0 0 5px rgba(0, 102, 255, 0.4);
-}
-
-/* Submit button */
-.login-form button {
-  width: 100%;
-  padding: 0.6rem;
-  background-color: #0066ff;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.login-form button:hover {
-  background-color: #004ecc;
-}
-
-/* Error message styling */
-.error-message {
-  color: #d93025; /* Google red */
-  margin-bottom: 1rem;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-align: left;
-}
-
-.form-wrapper {
-  max-width: 1500px;
-  margin: auto;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 0 10px #525252;
-  font-family: Arial, sans-serif;
-  color: #525252;
-}
-.page-container {
-  width: 2000px;      /* set this to your previous fixed width */
-  margin: 0 auto;    /* center horizontally */
-  padding: 20px;     /* optional padding */
-  box-sizing: border-box;
-}
+/* Login form styles from your existing CSS */
 .login-container {
   max-width: 360px;
   margin: 100px auto;

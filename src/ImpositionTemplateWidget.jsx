@@ -7,7 +7,7 @@ function ImpositionTemplateWidget({ value, onChange }) {
 
   // Load templates.json once on mount
   useEffect(() => {
-    fetch("/templates.json")
+    fetch(process.env.PUBLIC_URL + "/templates.json")
       .then((res) => res.json())
       .then((data) => {
         // Convert JSON to react-select grouped options format

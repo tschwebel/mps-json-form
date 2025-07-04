@@ -2,11 +2,10 @@ import React, { useState, useEffect, useMemo } from "react";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import ImpositionTemplateWidget from "./ImpositionTemplateWidget";
-// import FileNameWithExtensionWidget from "./FileNameWithExtensionWidget";
 import "./App.css";
 
 const BASE_PATH = "D:/DesignMerge_Workflows/z_TESTING/Place Job Folders Here/";
-const PRESET_PATH = "D:/DesignMerge_Workflows/z_TESTING/ImpositionPresets/";
+const PRESET_PATH = "D:/DesignMerge_Workflows/ImpositionPresets/";
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -15,8 +14,7 @@ function Login({ onLogin }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Only accept prep / s!mplify!
-    if (username === "prep" && password === "s!mplify!") {
+    if (username === "prep" && password === "frosty") {
       onLogin(username);
     } else {
       setError("Invalid username or password.");
@@ -64,14 +62,15 @@ function App() {
   const [presetList, setPresetList] = useState([]);
   const [isLoadingPresets, setIsLoadingPresets] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [hasErrors, setHasErrors] = useState(false);
+  const [lastErrors, setLastErrors] = useState([]);
 
-  // For storing natural image sizes to scale properly
+  // Store natural image sizes for scaling and layout
   const [side1Size, setSide1Size] = useState({ width: 0, height: 0 });
   const [side2Size, setSide2Size] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    fetch("/templates.json")
+    fetch(process.env.PUBLIC_URL + "/templates.json")
       .then((res) => res.json())
       .then((data) => {
         const flattened = Object.values(data).flat();
@@ -85,47 +84,20 @@ function App() {
       });
   }, []);
 
-  // Your entire original schema, uiSchema, validate, handleSubmit, getScaledStyle here
-  // (I will omit repeated code for brevity but you keep your exact original code)
-
   const baseSchema = {
-    title: "MPS Automation Job Setup",
+    title: "DesignMerge Variable Data Job Information",
     type: "object",
     properties: {
-      JobFolderName: {
-        type: "string",
-        title: "Folder Name (within job folder)",
-      },
-      ImpositionTemplate: {
-        type: "string",
-        title: "Imposition Template",
-      },
-      kPageSetsPerJob: {
-        type: "string",
-        title: "Records Per Lift",
-        default: "Default",
-      },
-      kStartRecord: {
-        type: "string",
-        title: "Start Record",
-        default: "Default",
-      },
-      kEndRecord: {
-        type: "string",
-        title: "End Record",
-        default: "Default",
-      },
+      JobFolderName: { type: "string", title: "Job Number" },
+      ImpositionTemplate: { type: "string", title: "Imposition Template" },
+      kPageSetsPerJob: { type: "string", title: "Records Per Lift", default: "Default" },
+      kStartRecord: { type: "string", title: "Start Record", default: "Default" },
+      kEndRecord: { type: "string", title: "End Record", default: "Default" },
       kPDFImposerImposeType: {
         type: "string",
         title: "Imposition Type",
         default: "Cut & Stack",
-        enum: [
-          "Sequential",
-          "Cut & Stack",
-          "Label Sort",
-          "Step & Repeat",
-          "2u Saddle Stitch",
-        ],
+        enum: ["Sequential", "Cut & Stack", "Label Sort", "Step & Repeat", "2u Saddle Stitch"],
       },
       NeedsSampleOutput: {
         type: "string",
@@ -136,23 +108,18 @@ function App() {
         type: "string",
         title: "Apply Sample Watermark?",
         enum: ["Yes", "No"],
-        default: "No",
+        default: "Yes",
       },
-      SampleStartRecord: {
-        type: "string",
-        title: "Sample Start Record",
-        default: "Default",
-      },
-      SampleEndRecord: {
-        type: "string",
-        title: "Sample End Record",
-        default: "Default",
-      },
+      SampleStartRecord: { type: "string", title: "Sample Start Record", default: "Default" },
+      SampleEndRecord: { type: "string", title: "Sample End Record", default: "Default" },
     },
     required: [
       "JobFolderName",
       "ImpositionTemplate",
       "NeedsSampleOutput",
+      "kPageSetsPerJob",
+      "kStartRecord",
+      "kEndRecord",
     ],
   };
 
@@ -170,50 +137,33 @@ function App() {
         ],
       };
     } else {
-      const {
-        NeedsSampleWatermark,
-        SampleStartRecord,
-        SampleEndRecord,
-        ...propsWithoutSamples
-      } = baseSchema.properties;
-
+      const { NeedsSampleWatermark, SampleStartRecord, SampleEndRecord, ...restProps } =
+        baseSchema.properties;
       return {
         ...baseSchema,
-        properties: propsWithoutSamples,
+        properties: restProps,
         required: baseSchema.required.filter(
-          (r) =>
-            ![
-              "NeedsSampleWatermark",
-              "SampleStartRecord",
-              "SampleEndRecord",
-            ].includes(r)
+          (r) => !["NeedsSampleWatermark", "SampleStartRecord", "SampleEndRecord"].includes(r)
         ),
       };
     }
   }, [formData.NeedsSampleOutput]);
 
   const uiSchema = {
-    ImpositionTemplate: {
-      "ui:widget": ImpositionTemplateWidget,
-    },
-    NeedsSampleOutput: {
-      "ui:widget": "radio",
-    },
-    NeedsSampleWatermark: {
-      "ui:widget": "radio",
-    },
+    ImpositionTemplate: { "ui:widget": ImpositionTemplateWidget },
+    NeedsSampleOutput: { "ui:widget": "radio" },
+    NeedsSampleWatermark: { "ui:widget": "radio" },
   };
 
+  // Validation: accept only "Default" or positive integer
   const validate = (formData, errors) => {
     const regexPositiveInt = /^[1-9]\d*$/;
-    const numericFields = ["kPageSetsPerJob", "kStartRecord", "kEndRecord"];
-    numericFields.forEach((field) => {
+    ["kPageSetsPerJob", "kStartRecord", "kEndRecord"].forEach((field) => {
       const val = formData[field];
       if (val !== "Default" && val !== undefined && !regexPositiveInt.test(val)) {
         errors[field].addError("Must be 'Default' or a positive integer");
       }
     });
-
     if (formData.NeedsSampleOutput === "Yes") {
       ["SampleStartRecord", "SampleEndRecord"].forEach((field) => {
         const val = formData[field];
@@ -222,11 +172,15 @@ function App() {
         }
       });
     }
-
     return errors;
   };
 
   const handleSubmit = ({ formData }) => {
+    if (hasErrors) {
+      alert("Please fix the highlighted errors before submitting.");
+      return; // Block submit if errors exist
+    }
+
     const {
       JobFolderName,
       ImpositionTemplate,
@@ -241,8 +195,7 @@ function App() {
     } = formData;
 
     const fullPath = `${BASE_PATH}${JobFolderName}`;
-    const isPreset =
-      Array.isArray(presetList) && presetList.includes(ImpositionTemplate);
+    const isPreset = Array.isArray(presetList) && presetList.includes(ImpositionTemplate);
     const impositionTemplatePath = isPreset
       ? `${PRESET_PATH}${ImpositionTemplate}`
       : `${fullPath}/${ImpositionTemplate}`;
@@ -360,48 +313,41 @@ function App() {
           : [],
     };
 
-    const blob = new Blob([JSON.stringify(output, null, 2)], {
-      type: "application/json",
-    });
+    const blob = new Blob([JSON.stringify(output, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${JobFolderName}_MPS_Settings.json`;
+    a.download = `${JobFolderName}_JobSettings.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const isPreset =
-    Array.isArray(presetList) && presetList.includes(formData.ImpositionTemplate);
+  const isPreset = Array.isArray(presetList) && presetList.includes(formData.ImpositionTemplate);
   const fullPath = `${BASE_PATH}${formData.JobFolderName || ""}`;
 
   const getScaledStyle = ({ width, height }, maxSize = 1000) => {
     if (!width || !height) return {};
-
     if (width >= height) {
       const scale = maxSize / width;
-      return {
-        width: maxSize,
-        height: height * scale,
-      };
+      return { width: maxSize, height: height * scale };
     } else {
       const scale = maxSize / height;
-      return {
-        width: width * scale,
-        height: maxSize,
-      };
+      return { width: width * scale, height: maxSize };
     }
   };
 
   if (!isAuthenticated) {
-    return <Login onLogin={(user) => { setIsAuthenticated(true); setLoggedInUser(user); }} />;
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
   }
 
   return (
     <div className="page-container">
       <div className="form-wrapper">
-        {/* Logo if you want */}
-        {<img src="/2013_TSG_Logo_Outline.png" alt="Logo" className="form-logo" />}
+        <img
+          src={process.env.PUBLIC_URL + "/2013_TSG_Logo_Outline.png"}
+          alt="Logo"
+          className="form-logo"
+        />
 
         {isLoadingPresets ? (
           <div className="loading">Loading preset templates...</div>
@@ -412,8 +358,24 @@ function App() {
               uiSchema={uiSchema}
               formData={formData}
               validate={validate}
-              onChange={(e) => setFormData(e.formData)}
+              onChange={(e) => {
+                setFormData(e.formData);
+                setHasErrors(false);
+                setLastErrors([]);
+              }}
               onSubmit={handleSubmit}
+              onError={(errors) => {
+                setHasErrors(true);
+                setLastErrors(errors);
+                // Build a detailed error message for alert
+                const errorMessages = errors
+                  .map((err) => {
+                    const fieldName = err.property.replace(/^\.*/, "");
+                    return `${fieldName}: ${err.message}`;
+                  })
+                  .join("\n");
+                alert(`Please fix the following errors before submitting:\n${errorMessages}`);
+              }}
               validator={validator}
               className="custom-form"
             />
@@ -422,44 +384,55 @@ function App() {
               <div className="template-preview">
                 <strong>Selected Imposition Template:</strong>
                 <div className="template-info">
-                  <div className="template-thumbnails">
-                    <img
-                      key={`${formData.ImpositionTemplate}-1`}
-                      src={
-                        isPreset
-                          ? `/presets/${formData.ImpositionTemplate.replace(/\.pdf$/i, "")}-1.png`
-                          : `/jobs/${formData.JobFolderName}/${formData.ImpositionTemplate.replace(/\.pdf$/i, "")}-1.png`
-                      }
-                      alt="Side 1 Preview"
-                      onError={(e) => (e.target.style.display = "none")}
-                      onLoad={(e) =>
-                        setSide1Size({
-                          width: e.target.naturalWidth,
-                          height: e.target.naturalHeight,
-                        })
-                      }
-                      style={getScaledStyle(side1Size)}
-                      className="template-thumb"
-                    />
-                    <img
-                      key={`${formData.ImpositionTemplate}-2`}
-                      src={
-                        isPreset
-                          ? `/presets/${formData.ImpositionTemplate.replace(/\.pdf$/i, "")}-2.png`
-                          : `/jobs/${formData.JobFolderName}/${formData.ImpositionTemplate.replace(/\.pdf$/i, "")}-2.png`
-                      }
-                      alt="Side 2 Preview"
-                      onError={(e) => (e.target.style.display = "none")}
-                      onLoad={(e) =>
-                        setSide2Size({
-                          width: e.target.naturalWidth,
-                          height: e.target.naturalHeight,
-                        })
-                      }
-                      style={getScaledStyle(side2Size)}
-                      className="template-thumb"
-                    />
-                  </div>
+                  {(() => {
+                    const isVerticalStack =
+                      side1Size.width > side1Size.height && side2Size.width > side2Size.height;
+                    return (
+                      <div
+                        className={
+                          "template-thumbnails " +
+                          (isVerticalStack ? "template-thumbnails-vertical" : "")
+                        }
+                      >
+                        <img
+                          key={`${formData.ImpositionTemplate}-1`}
+                          src={
+                            isPreset
+                              ? `${process.env.PUBLIC_URL}/presets/${formData.ImpositionTemplate.replace(/\.pdf$/i, "")}-1.png`
+                              : `${process.env.PUBLIC_URL}/jobs/${formData.JobFolderName}/${formData.ImpositionTemplate.replace(/\.pdf$/i, "")}-1.png`
+                          }
+                          alt="Side 1 Preview"
+                          onError={(e) => (e.target.style.display = "none")}
+                          onLoad={(e) =>
+                            setSide1Size({
+                              width: e.target.naturalWidth,
+                              height: e.target.naturalHeight,
+                            })
+                          }
+                          style={getScaledStyle(side1Size)}
+                          className="template-thumb"
+                        />
+                        <img
+                          key={`${formData.ImpositionTemplate}-2`}
+                          src={
+                            isPreset
+                              ? `${process.env.PUBLIC_URL}/presets/${formData.ImpositionTemplate.replace(/\.pdf$/i, "")}-2.png`
+                              : `${process.env.PUBLIC_URL}/jobs/${formData.JobFolderName}/${formData.ImpositionTemplate.replace(/\.pdf$/i, "")}-2.png`
+                          }
+                          alt="Side 2 Preview"
+                          onError={(e) => (e.target.style.display = "none")}
+                          onLoad={(e) =>
+                            setSide2Size({
+                              width: e.target.naturalWidth,
+                              height: e.target.naturalHeight,
+                            })
+                          }
+                          style={getScaledStyle(side2Size)}
+                          className="template-thumb"
+                        />
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}
